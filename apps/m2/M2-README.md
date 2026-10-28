@@ -1,5 +1,7 @@
 # Milestone-2
 
+The new SoupReplacer API is located in beautifulsoup/bs4/filter.py in line 313. The new replacer parameter and element replacement action is located in `beautifulsoup/bs4/__init__.py` starting at the BeautifulSoup class in line 128.
+
 ## Part-2 - All APIS used in Milestone-1 and Milestone-2 Part-1
 
 ### Milestone-1 APIs
@@ -8,7 +10,7 @@
 BeautifulSoup(htmlFile, "html.parser")
 ```
 
-BeautifulSoup class is located in line 133 in beautifulsoup/bs4/**init**.py. The class takes in several parameters, most relevant is the `markup: _IncomingMarkup = "",` in line 211 and the `features: Optional[Union[str, Sequence[str]]] = None,` in line 212. The markup parameter is the file/string that contains the markup that needs to be parsed, while the features parameter is used to indicate the parser preference (HTML, XML, etc). The BeautifulSoup class also specifies a filter via `parse_only` to only filter specific elements
+BeautifulSoup class is located in line 128 in `beautifulsoup/bs4/__init__.py`. The class takes in several parameters, most relevant is the `markup: _IncomingMarkup = "",` in line 181 and the `features: Optional[Union[str, Sequence[str]]] = None,` in line 182. The markup parameter is the file/string that contains the markup that needs to be parsed, while the features parameter is used to indicate the parser preference (HTML, XML, etc). The BeautifulSoup class also specifies a filter via `parse_only` to only filter specific elements
 
 ```Python
 soup.prettify()
