@@ -313,15 +313,30 @@ class StringMatchRule(MatchRule):
 class SoupReplacer(ElementFilter):
     og_name_rule: List[TagNameMatchRule]
     alt_name_rule: str
+    name_xformer_callable: Optional[Callable]
+    attrs_xformer_callable: Optional[Callable]
+    xformer_callable: Optional[Callable]
 
-    def __init__(self, og_tag: Optional[_StrainableElement] = None, alt_tag: str = ""):
+    def __init__(
+        self,
+        og_tag: Optional[_StrainableElement] = None,
+        alt_tag: str = "",
+        name_xformer: Optional[Callable] = None,
+        attrs_xformer: Optional[Callable] = None,
+        xformer: Optional[Callable] = None,
+    ):
         self.og_name_rule = cast(
             List[TagNameMatchRule],
             list(SoupStrainer._make_match_rules(og_tag, TagNameMatchRule)),
         )
         self.alt_name_rule = alt_tag
+        self.name_xformer_callable = name_xformer
+        self.attrs_xformer_callable = attrs_xformer
+        self.xformer_callable = xformer
 
-    def replace_tag(self, nsprefix: Optional[str], name: str) -> Optional[str]:
+    def replace_tag(
+        self, nsprefix: Optional[str], name: Optional[str]
+    ) -> Optional[str]:
         if not self.og_name_rule:
             return None
         prefixed_name = f"{nsprefix}:{name}" if nsprefix else None

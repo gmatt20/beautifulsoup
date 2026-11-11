@@ -50,6 +50,7 @@ __all__ = [
 
 from collections import Counter
 import sys
+from types import SimpleNamespace
 import warnings
 
 # The very first thing we do is give a useful error if someone is
@@ -1054,6 +1055,12 @@ class BeautifulSoup(Tag):
         if self._most_recent_element is not None:
             self._most_recent_element.next_element = tag
         self._most_recent_element = tag
+        if self.replacer and self.replacer.name_xformer_callable:
+            tag.name = self.replacer.name_xformer_callable(tag)
+        if self.replacer and self.replacer.attrs_xformer_callable:
+            tag.attrs = self.replacer.attrs_xformer_callable(tag)
+        if self.replacer and self.replacer.xformer_callable:
+            self.replacer.xformer_callable(tag)
         self.pushTag(tag)
         return tag
 
@@ -1066,11 +1073,13 @@ class BeautifulSoup(Tag):
         :meta private:
         """
         # print("End tag: " + name)
-
         if self.replacer:
-            replacement = self.replacer.replace_tag(nsprefix, name)
-            if replacement:
-                name = replacement
+            if self.replacer.name_xformer_callable:
+                name = self.replacer.name_xformer_callable(SimpleNamespace(name=name))
+            else:
+                replacement = self.replacer.replace_tag(nsprefix, name)
+                if replacement:
+                    name = replacement
         self.endData()
         self._popToTag(name, nsprefix)
 

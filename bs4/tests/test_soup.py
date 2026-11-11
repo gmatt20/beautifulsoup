@@ -3,6 +3,7 @@
 
 import logging
 import pickle
+import re
 import pytest
 from typing import Iterable
 
@@ -52,6 +53,72 @@ class TestReplacer(SoupTest):
         replaced = BeautifulSoup(testHtml, "html.parser", replacer=replacer)
         assert replaced.find_all("b") == []
         assert len(replaced.find_all("blockquote")) == 2
+
+    def test_name_xformer(self):
+        b_to_blockquote = SoupReplacer(
+            name_xformer=lambda tag: "blockquote" if tag.name == "b" else tag.name
+        )
+        testHtml = """<div><b>bold</b><i>italic</i></div><p>text<b>nested</b>end</p>"""
+        replaced = BeautifulSoup(testHtml, "html.parser", replacer=b_to_blockquote)
+        assert replaced.find_all("b") == []
+        assert len(replaced.find_all("blockquote")) == 2
+
+    def test_attrs_xformer(self):
+        class_to_test = SoupReplacer(
+            attrs_xformer=lambda tag: (
+                {**tag.attrs, "class": "test"}
+                if tag.get("class") == ["hi"]
+                else tag.attrs
+            )
+        )
+        testHtml = """<div class="hi"><b class="hi">bold</b><i>italic</i></div><p class="hi">text<b>nested</b>end</p>"""
+        replaced = BeautifulSoup(testHtml, "html.parser", replacer=class_to_test)
+        assert len(replaced.find_all(class_="test")) == 3
+
+    def test_xformer(self):
+        def remove_class_attr(tag):
+            if "class" in tag.attrs:
+                del tag.attrs["class"]
+
+        class_deleter = SoupReplacer(xformer=remove_class_attr)
+        testHtml = """<div class="hi"><b class="hi">bold</b><i>italic</i></div><p class="hi">text<b>nested</b>end</p>"""
+        replaced = BeautifulSoup(testHtml, "html.parser", replacer=class_deleter)
+        assert len(replaced.find_all(class_="class")) == 0
+
+    def test_name_xformer_func(self):
+        def replace_blockquote(tag):
+            if tag.name == "b":
+                return "blockquote"
+            else:
+                return tag.name
+
+        b_to_blockquote = SoupReplacer(name_xformer=replace_blockquote)
+        testHtml = """<div><b>bold</b><i>italic</i></div><p>text<b>nested</b>end</p>"""
+        replaced = BeautifulSoup(testHtml, "html.parser", replacer=b_to_blockquote)
+        assert replaced.find_all("b") == []
+        assert len(replaced.find_all("blockquote")) == 2
+
+    def test_attrs_xformer_func(self):
+        def replace_class(tag):
+            if tag.get("class"):
+                return {**tag.attrs, "class": "test"}
+            else:
+                return tag.attrs
+
+        class_to_test = SoupReplacer(attrs_xformer=replace_class)
+        testHtml = """<div class="hi"><b class="hi">bold</b><i>italic</i></div><p class="hi">text<b>nested</b>end</p>"""
+        replaced = BeautifulSoup(testHtml, "html.parser", replacer=class_to_test)
+        assert len(replaced.find_all(class_="test")) == 3
+
+    def test_xformer_del_replace_div(self):
+        def replace_div(tag):
+            if "div" in tag.name:
+                tag.name = "test"
+
+        class_deleter = SoupReplacer(xformer=replace_div)
+        testHtml = """<div class="hi"><b class="hi">bold</b><i>italic</i></div><p class="hi">text<b>nested</b>end</p>"""
+        replaced = BeautifulSoup(testHtml, "html.parser", replacer=class_deleter)
+        assert len(replaced.find_all("test")) == 1
 
 
 class TestConstructor(SoupTest):
