@@ -4,6 +4,7 @@
 import logging
 import pickle
 import re
+import types
 import pytest
 from typing import Iterable
 
@@ -17,6 +18,9 @@ from bs4.builder import (
 )
 from bs4.element import (
     AttributeValueList,
+    Doctype,
+    PageElement,
+    Stylesheet,
     XMLAttributeDict,
     Comment,
     PYTHON_SPECIFIC_ENCODINGS,
@@ -39,6 +43,82 @@ from . import (
 )
 import warnings
 from typing import Type
+
+
+class TestIterable(SoupTest):
+    def test_iterable_html_file(self):
+        testHtml = """<div><b>bold</b><i>italic</i></div><p>text<b>nested</b>end</p>"""
+        soup = BeautifulSoup(testHtml, "html.parser")
+
+        count = 0
+
+        for node in soup:
+            assert isinstance(node, PageElement)
+            count += 1
+        assert count == 10
+
+    def test_iterable_instances(self):
+        testHtml = """<div><b>bold</b><i>italic</i></div><p>text<b>nested</b>end</p>"""
+        soup = BeautifulSoup(testHtml, "html.parser")
+
+        tagCount = 0
+        navigableStringCount = 0
+
+        for node in soup:
+            if isinstance(node, Tag):
+                tagCount += 1
+            elif isinstance(node, NavigableString):
+                navigableStringCount += 1
+        assert tagCount == 5
+        assert navigableStringCount == 5
+
+    def test_iterable_document_order(self):
+        testHtml = """<div><b>bold</b><i>italic</i></div><p>text<b>nested</b>end</p>"""
+        soup = BeautifulSoup(testHtml, "html.parser")
+
+        visited = []
+
+        for node in soup:
+            visited.append((type(node).__name__, str(node)))
+
+        assert visited == [
+            ("Tag", "<div><b>bold</b><i>italic</i></div>"),
+            ("Tag", "<b>bold</b>"),
+            ("NavigableString", "bold"),
+            ("Tag", "<i>italic</i>"),
+            ("NavigableString", "italic"),
+            ("Tag", "<p>text<b>nested</b>end</p>"),
+            ("NavigableString", "text"),
+            ("Tag", "<b>nested</b>"),
+            ("NavigableString", "nested"),
+            ("NavigableString", "end"),
+        ]
+
+    def test_iterable_object_types(self):
+        testHtml = """<!DOCTYPE html><style>p{color:red}div{background-color: blue}</style><div><b><!--Note-->bold</b><i>italic</i></div><p>text<b>nested</b>end</p>"""
+        soup = BeautifulSoup(testHtml, "html.parser")
+
+        docTypeCount = 0
+        styleCount = 0
+        commentCount = 0
+
+        for node in soup:
+            if isinstance(node, Doctype):
+                docTypeCount += 1
+            elif isinstance(node, Stylesheet):
+                styleCount += 1
+            elif isinstance(node, Comment):
+                commentCount += 1
+
+        assert docTypeCount == 1
+        assert styleCount == 1
+        assert commentCount == 1
+
+    def test_iterable_not_list(self):
+        testHtml = """<!DOCTYPE html><style>p{color:red}div{background-color: blue}</style><div><b><!--Note-->bold</b><i>italic</i></div><p>text<b>nested</b>end</p>"""
+        soup = BeautifulSoup(testHtml, "html.parser")
+
+        assert isinstance(iter(soup), types.GeneratorType)
 
 
 class TestReplacer(SoupTest):

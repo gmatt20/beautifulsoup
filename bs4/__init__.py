@@ -493,6 +493,14 @@ class BeautifulSoup(Tag):
         self.markup = None
         self.builder.soup = None
 
+    def __iter__(self):
+        curr: Optional[PageElement] = None
+        if self.contents:
+            curr = self.contents[0]
+        while curr is not None:
+            yield curr
+            curr = curr.next_element
+
     def copy_self(self) -> "BeautifulSoup":
         """Create a new BeautifulSoup object with the same TreeBuilder,
         but not associated with any markup.

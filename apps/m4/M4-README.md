@@ -1,1 +1,3 @@
 # Milestone-4
+
+`BeautifulSoup` now defines `__iter__` as a generator. The iterable function utilizes the `PageElement` which has the `next_element` member that allows the iterable function to walk the current BeautifulSoup tree in order starting from the root's first child towards its descendants. No lists are being built and each node is being yielded. 5 new tests in `bs4/tests/test_soup.py` `class TestIterable` cover the node count, the `Tag`/`NavigableString` split, exact document order, node types such as `Doctype` and `Comment`, and that `iter(soup)` returns a generator rather than a list.
